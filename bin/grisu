@@ -1,0 +1,147 @@
+#!/usr/bin/env python3
+
+import argparse
+import os
+import sys
+import json
+
+GRISU_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+sys.path.insert(0, os.path.join(GRISU_DIR,"lib","python") )
+
+import weblib
+
+from grisulib import jsonlib
+jsonlib.json_settings()
+
+
+import grisulib
+
+parser = argparse.ArgumentParser(description="Vulnerability tester")
+parser.add_argument('--version', action='version', version='%%(prog)s %s' % grisulib.Config.VERSION)
+
+parser.add_argument("hostadr",
+                    type=str,
+                    help="host to test",
+                    metavar="IP")
+
+parser.add_argument("-p", "--port", dest="port", 
+                    type=int,
+                    help="port to test (default: %s)" % grisulib.Config.DEFAULT_PORT, 
+                    metavar="PORT")
+
+
+parser.add_argument("-u", "--url", dest="url", 
+                    type=str,
+                    help="url or servername/virtualhost to test",
+                    metavar="URL")
+
+tgroups={
+    "-": parser.add_argument_group("Tests - Misc","")
+}
+
+for section in grisulib.TestRegister.sections:
+    if not section in tgroups:
+        tgroups[section]=parser.add_argument_group("Tests - %s" % section,"")
+
+    for flags,dest,name in grisulib.TestRegister.sections[section]:
+        tgroups["-"].add_argument(
+            *flags,
+            dest=dest,
+            action='store_true',
+            help=name
+        )
+
+
+if __name__ == '__main__':
+    options=vars(parser.parse_args())
+
+    grisulib.Config.set_options(options)
+    target=grisulib.Target.from_options(options)
+    cmd_list=grisulib.TestRegister.get_commands(options)
+
+    runner=grisulib.TestRunner()
+
+    for c in cmd_list:
+        runner.add_test(c,target)
+
+    runner.run()
+    
+        # ret=c([target])
+
+        # if type(ret) is not list:
+        #     print(c.txt(ret))
+        #     continue
+
+        # for r in ret:
+        #     print(c.txt(r))
+
+    
+    # if options.conf_file is not None:
+    #     options.conf_file=os.path.abspath(options.conf_file)
+    # else:
+    #     options.conf_file=config.CONFIG_FILE
+    # config.setup_config(options)
+
+    # if os.path.exists(config.PID_FILE):
+    #     print("Error: Pid file %s exists. Abort" % config.PID_FILE )
+    #     sys.exit()
+
+    # config.setup_log()
+    # if config.DEBUG:
+    #     common.log("Debug is enabled")
+
+    # if config.DAEMON:
+    #     daemon_stdout=open(os.path.join(config.LOG_DIR,"stdout.log"),"w")
+    #     daemon_stderr=open(os.path.join(config.LOG_DIR,"stderr.log"),"w")
+
+    #     core_resource = resource.RLIMIT_CORE
+    #     resource.getrlimit(core_resource)
+    #     core_limit = (0, 0)
+    #     resource.setrlimit(core_resource, core_limit)
+
+    #     os.umask(config.UMASK)
+    #     os.chdir(config.WORKING_DIR)
+    #     try:
+    #         os.initgroups(config.USER.pw_name, config.GROUP.gr_gid)
+    #         os.setgid(config.GROUP.gr_gid)	
+    #         os.setuid(config.USER.pw_uid)
+    #     except PermissionError as e:
+    #         print("Warning: You can't change owner: %s" % str(e))
+
+    #     pid = os.fork()
+    #     if pid > 0:
+    #         os._exit(0)
+
+    #     os.dup2(os.open(os.devnull, os.O_RDWR), sys.stdin.fileno())
+    #     os.dup2(daemon_stdout.fileno(), sys.stdout.fileno())
+    #     os.dup2(daemon_stderr.fileno(), sys.stderr.fileno())
+
+    # with open(config.PID_FILE,"w") as fd:
+    #     fd.write(str(os.getpid()))
+
+    # def stop(signum,trace):
+    #     print(signum)
+    #     try:
+    #         os.remove(config.PID_FILE)
+    #     except OSError as e:
+    #         pass
+    #     sys.exit()
+
+    # signal.signal(signal.SIGINT,stop)
+    # signal.signal(signal.SIGTERM,stop)
+    # signal.signal(signal.SIGQUIT,stop)
+
+    # db=database.BrocchettaDatabase(options.conf_file)
+    # bus=channels.Bus()
+
+    # i=inputmanager.BrocchettaInput(db,bus)
+    # o=outputmanager.BrocchettaOutput(db,bus)
+    # n=normalizermanager.BrocchettaNormalizer(db,bus)
+
+    # server=server.BrocchettaServer(db,bus,
+    #                                host=config.HOST,
+    #                                port=config.PORT)
+    # server.start()
+
+

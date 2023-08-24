@@ -25,8 +25,10 @@ class OpenSSLCertificate(object):
 
     def __call__(self,hostadr,port,**kwargs):
         s_client_cmd=[ 
-            self.cmd, "s_client", 
-            "-connect", "%s:%s" % (hostadr,port) 
+            self.cmd,
+            "s_client", 
+            "-connect",
+            "%s:%s" % (hostadr,port) 
         ]
 
         kwargs_s_client={}
@@ -37,7 +39,6 @@ class OpenSSLCertificate(object):
         if "proxychains" in kwargs and kwargs["proxychains"] is not None:
             s_client_cmd=["proxychains"]+s_client_cmd
             kwargs_s_client["cwd"]=kwargs["proxychains"]
-        
 
         x509_cmd=[ 
             self.cmd, 
